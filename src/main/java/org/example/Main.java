@@ -15,8 +15,6 @@ public class Main {
 
     //SQl запросы
     private final static String SELECT_WHERE = "SELECT * FROM FOOD WHERE FOOD_NAME=?";
-    private final static String INSERT = "INSERT INTO FOOD(FOOD_NAME,FOOD_TYPE,FOOD_EXOTIC) VALUES (?,?,?)";
-    private final static String DELETE = "DELETE FROM FOOD WHERE FOOD_NAME=?";
     private final static List<String> foodTypes = Arrays.asList("FRUIT", "VEGETABLE");
 
     public static void main(String[] args) throws SQLException {
@@ -41,7 +39,7 @@ public class Main {
             ResultSet resultSet = statementSelect.executeQuery();
             //Проверяем есть ли сущность в таблице(не должно быть) т.к. не добавили еще
             Assertions.assertEquals(resultSet.next(), Boolean.FALSE);
-            //Стейтмент для INSERT
+            //Пост запрос для добавления продукта
             Response response = given()
                     .baseUri("http://localhost:8080")
                     .header("Content-type", "application/json")
@@ -56,8 +54,8 @@ public class Main {
             Assertions.assertEquals(resultSet.next(), Boolean.TRUE);
             Assertions.assertEquals(resultSet.next(), Boolean.FALSE);
 
-            String sessionId=response.getSessionId();
-            given().sessionId(sessionId)
+            String sessionId=response.getSessionId();//Запоминаем айди сессии
+            given().sessionId(sessionId)//Гет запрос для получения списка продуктов
                     .baseUri("http://localhost:8080")
                     .when()
                     .get("/api/food")
