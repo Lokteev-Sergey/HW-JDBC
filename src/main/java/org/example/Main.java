@@ -1,11 +1,18 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
+
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 
+import static io.restassured.RestAssured.given;
+
 public class Main {
+
     //SQl запросы
     private final static String SELECT_WHERE = "SELECT * FROM FOOD WHERE FOOD_NAME=?";
     private final static String INSERT = "INSERT INTO FOOD(FOOD_NAME,FOOD_TYPE,FOOD_EXOTIC) VALUES (?,?,?)";
@@ -13,6 +20,7 @@ public class Main {
     private final static List<String> foodTypes = Arrays.asList("FRUIT", "VEGETABLE");
 
     public static void main(String[] args) throws SQLException {
+        final ObjectMapper objectMapper = new ObjectMapper();
         Connection connection = null;
         PreparedStatement statementInsert = null;
         PreparedStatement statementSelect = null;
@@ -34,31 +42,30 @@ public class Main {
             //Проверяем есть ли сущность в таблице(не должно быть) т.к. не добавили еще
             Assertions.assertEquals(resultSet.next(), Boolean.FALSE);
             //Стейтмент для INSERT
-            statementInsert = connection.prepareStatement(INSERT);
-            statementInsert.setString(1, testFoodEntity.getFoodName());
-            statementInsert.setString(2, testFoodEntity.getFoodType());
-            statementInsert.setBigDecimal(3, testFoodEntity.getFoodExotic());
-            //Смотрим количество записей,затронутых операцией
-            int insertCount = statementInsert.executeUpdate();
-            //Количество вставок равно 1
-            Assertions.assertEquals(insertCount, 1);
-
+            Response response = given()
+                    .baseUri("http://localhost:8080")
+                    .header("Content-type", "application/json")
+                    .body(objectMapper.convertValue(testFoodEntity, JsonNode.class))
+                    .when()
+                    .post("/api/food")
+                    .then()
+                    .extract()
+                    .response();
             resultSet = statementSelect.executeQuery();
             //Сущность добавлена т.е. нашли с помощью SELECT и она одна
             Assertions.assertEquals(resultSet.next(), Boolean.TRUE);
-            Assertions.assertEquals(resultSet.next(),Boolean.FALSE);
-            //Стейтмент для DELETE
-            statementDelete = connection.prepareStatement(DELETE);
-            statementDelete.setString(1, testFoodEntity.getFoodName());
-            //Удаляем и смотрим сколько строк удалили
-            int deleteCount = statementDelete.executeUpdate();
-            Assertions.assertEquals(deleteCount, 1);
-             //Сущность удалена,в таблице не найдена
-            resultSet = statementSelect.executeQuery();
             Assertions.assertEquals(resultSet.next(), Boolean.FALSE);
 
+            String sessionId=response.getSessionId();
+            given().sessionId(sessionId)
+                    .baseUri("http://localhost:8080")
+                    .when()
+                    .get("/api/food")
+                    .then()
+                    .log().all()
+            ;
         } catch (Exception e) {
-           e.printStackTrace();
+            e.printStackTrace();
         } finally {//Закрываем statement и connection
             if (statementSelect != null) {
                 statementSelect.close();

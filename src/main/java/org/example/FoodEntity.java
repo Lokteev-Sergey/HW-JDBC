@@ -1,11 +1,20 @@
 package org.example;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+
 public class FoodEntity {
+
     private Integer foodId;
+    @JsonProperty("name")
     private String foodName;
+    @JsonProperty("type")
     private String foodType;
+    @JsonProperty("exotic")
     private BigDecimal foodExotic;
 
     public Integer getFoodId() {
@@ -16,6 +25,7 @@ public class FoodEntity {
         this.foodId = foodId;
     }
 
+    @JsonIgnore
     public String getFoodIdColumnName() {
         return "FOOD_ID";
     }
@@ -28,6 +38,7 @@ public class FoodEntity {
         this.foodName = foodName;
     }
 
+    @JsonIgnore
     public String getFoodNameColumnName() {
         return "FOOD_NAME";
     }
@@ -40,6 +51,7 @@ public class FoodEntity {
         this.foodType = foodType;
     }
 
+    @JsonIgnore
     public String getFoodTypeColumnName() {
         return "FOOD_TYPE";
     }
@@ -52,6 +64,7 @@ public class FoodEntity {
         this.foodExotic = foodExotic;
     }
 
+    @JsonIgnore
     public String getFoodExoticColumnName() {
         return "FOOD_EXOTIC";
     }
